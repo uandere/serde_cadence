@@ -4,8 +4,10 @@ use std::fmt;
 
 #[cfg(feature = "derive")]
 pub use cadence_json_derive::{FromCadenceValue, ToCadenceValue};
+use crate::conversion::value_to_cadence_value;
 
 pub mod impls;
+pub mod conversion;
 
 /// A Cadence value as represented in JSON
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -505,35 +507,22 @@ where
     from_cadence_value(&cadence_value)
 }
 
-// Helper functions for conversion
 fn to_cadence_value<T>(value: &T) -> Result<CadenceValue>
 where
     T: Serialize + ?Sized,
 {
-    // This is a placeholder implementation.
-    // A real implementation would need to analyze the Rust value
-    // and convert it to the appropriate CadenceValue variant.
-    // This would likely need custom serialization logic.
+    // First serialize to a serde_json::Value
+    let json_value = serde_json::to_value(value)?;
 
-    // For now, we'll just return an error
-    Err(Error::Custom(
-        "to_cadence_value not fully implemented".to_string(),
-    ))
+    // Then convert to CadenceValue
+    value_to_cadence_value(&json_value)
 }
-
 fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
-    // This is a placeholder implementation.
-    // A real implementation would need to convert the CadenceValue
-    // to the appropriate Rust type.
-    // This would likely need custom deserialization logic.
-
-    // For now, we'll just return an error
-    Err(Error::Custom(
-        "from_cadence_value not fully implemented".to_string(),
-    ))
+    // Use the proper implementation from the conversion module
+    conversion::from_cadence_value(cadence_value)
 }
 
 // Additional helper functions for specific type conversions
