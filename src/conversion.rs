@@ -468,30 +468,120 @@ pub fn cadence_value_to_value(cadence_value: &CadenceValue) -> Result<Value> {
 }
 
 // Now the important part - actually implementing the from_cadence_value function
+// This function needs to be updated to correctly handle dictionary types
 pub fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
-    // First convert to standard JSON value
-    let json_value = cadence_value_to_value(cadence_value)?;
+    // Check if we're deserializing to a HashMap or BTreeMap
+    let type_name = std::any::type_name::<T>();
+    let is_map = type_name.contains("HashMap") || type_name.contains("BTreeMap");
 
-    // Process the JSON value to convert string numbers to actual JSON numbers
-    let processed_value = process_numeric_values(json_value);
+    // Special handling for dictionaries being deserialized to maps
+    if is_map && matches!(cadence_value, CadenceValue::Dictionary { .. }) {
+        if let CadenceValue::Dictionary { value: entries } = cadence_value {
+            // Create a map that serde can deserialize into a HashMap/BTreeMap
+            let mut map = serde_json::Map::new();
 
-    // Extract primitive value if possible
-    let final_value = extract_primitive_value(&processed_value);
+            for entry in entries {
+                // Convert key to a string (the key for our JSON object)
+                let key_str = match &entry.key {
+                    CadenceValue::String { value } => value.clone(),
+                    // For other types, convert to string
+                    _ => {
+                        let key_json = cadence_value_to_value(&entry.key)?;
+                        if let Value::String(s) = extract_primitive_value(&key_json) {
+                            s
+                        } else {
+                            // If not a string, use JSON representation
+                            serde_json::to_string(&key_json)?
+                        }
+                    }
+                };
 
-    // Try to deserialize with the processed value
-    match serde_json::from_value(final_value) {
-        Ok(value) => Ok(value),
-        Err(e) => {
-            // If that fails, try with the original converted value
-            match serde_json::from_value(processed_value) {
-                Ok(value) => Ok(value),
-                Err(_) => Err(Error::SerdeJson(e)),
+                // Convert value and handle numeric conversions
+                let value_json = cadence_value_to_value(&entry.value)?;
+                let processed_value = process_numeric_values(value_json);
+                let final_value = extract_primitive_value(&processed_value);
+
+                // Add to our map
+                map.insert(key_str, final_value);
             }
+
+            // Deserialize the map directly to T (HashMap/BTreeMap)
+            return serde_json::from_value(Value::Object(map))
+                .map_err(|e| Error::SerdeJson(e));
         }
     }
+
+    // Special handling for numeric types
+    let is_numeric = type_name == "i8" || type_name == "i16" || type_name == "i32" ||
+        type_name == "i64" || type_name == "i128" || type_name == "u8" ||
+        type_name == "u16" || type_name == "u32" || type_name == "u64" ||
+        type_name == "u128" || type_name == "f32" || type_name == "f64";
+
+    if is_numeric {
+        match cadence_value {
+            CadenceValue::Int { value } |
+            CadenceValue::Int8 { value } |
+            CadenceValue::Int16 { value } |
+            CadenceValue::Int32 { value } |
+            CadenceValue::Int64 { value } |
+            CadenceValue::Int128 { value } |
+            CadenceValue::Int256 { value } => {
+                if type_name.starts_with('i') || type_name.starts_with('u') {
+                    if let Ok(n) = value.parse::<i64>() {
+                        return serde_json::from_value(Value::Number(serde_json::Number::from(n)))
+                            .map_err(|e| Error::SerdeJson(e));
+                    }
+                }
+            },
+            CadenceValue::UInt { value } |
+            CadenceValue::UInt8 { value } |
+            CadenceValue::UInt16 { value } |
+            CadenceValue::UInt32 { value } |
+            CadenceValue::UInt64 { value } |
+            CadenceValue::UInt128 { value } |
+            CadenceValue::UInt256 { value } => {
+                if type_name.starts_with('u') || type_name.starts_with('i') {
+                    if let Ok(n) = value.parse::<u64>() {
+                        return serde_json::from_value(Value::Number(serde_json::Number::from(n)))
+                            .map_err(|e| Error::SerdeJson(e));
+                    }
+                }
+            },
+            _ => {}
+        }
+    }
+
+    // Struct types with numeric fields
+    if std::any::type_name::<T>().contains("::") && !std::any::type_name::<T>().starts_with("std::") {
+        let json_value = cadence_value_to_value(cadence_value)?;
+        let processed = process_numeric_values(json_value);
+
+        // For composite types, we need to create a flat object with field names
+        if let CadenceValue::Struct { value } = cadence_value {
+            let mut obj = serde_json::Map::new();
+            for field in &value.fields {
+                let field_json = cadence_value_to_value(&field.value)?;
+                let processed_field = process_numeric_values(field_json);
+                obj.insert(field.name.clone(), extract_primitive_value(&processed_field));
+            }
+            return serde_json::from_value(Value::Object(obj))
+                .map_err(|e| Error::SerdeJson(e));
+        }
+
+        return serde_json::from_value(processed)
+            .map_err(|e| Error::SerdeJson(e));
+    }
+
+    // Standard path for other types
+    let json_value = cadence_value_to_value(cadence_value)?;
+    let processed = process_numeric_values(json_value);
+    let final_value = extract_primitive_value(&processed);
+
+    serde_json::from_value(final_value)
+        .map_err(|e| Error::SerdeJson(e))
 }
 
 // Helper function to recursively process JSON values and convert string numbers to actual JSON numbers
