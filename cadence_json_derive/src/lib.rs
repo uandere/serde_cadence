@@ -24,7 +24,7 @@ pub fn derive_to_cadence_value(input: TokenStream) -> TokenStream {
         let field_name_str = field_name.as_ref().unwrap().to_string();
 
         quote! {
-            let #field_name = cadence_json::CompositeField {
+            let #field_name = serde_cadence::CompositeField {
                 name: #field_name_str.to_string(),
                 value: self.#field_name.to_cadence_value()?,
             };
@@ -34,14 +34,14 @@ pub fn derive_to_cadence_value(input: TokenStream) -> TokenStream {
 
     // Generate the impl
     let expanded = quote! {
-        impl cadence_json::ToCadenceValue for #name {
-            fn to_cadence_value(&self) -> cadence_json::Result<cadence_json::CadenceValue> {
+        impl serde_cadence::ToCadenceValue for #name {
+            fn to_cadence_value(&self) -> serde_cadence::Result<serde_cadence::CadenceValue> {
                 let mut fields = Vec::new();
 
                 #(#field_conversions)*
 
-                Ok(cadence_json::CadenceValue::Struct {
-                    value: cadence_json::CompositeValue {
+                Ok(serde_cadence::CadenceValue::Struct {
+                    value: serde_cadence::CompositeValue {
                         id: stringify!(#name).to_string(),
                         fields,
                     },
@@ -77,11 +77,11 @@ pub fn derive_from_cadence_value(input: TokenStream) -> TokenStream {
                 let field = fields.iter()
                     .find(|f| f.name == #field_name_str)
                     .ok_or_else(||
-                        cadence_json::Error::Custom(
+                        serde_cadence::Error::Custom(
                             format!("Field {} not found in Cadence value", #field_name_str)
                         )
                     )?;
-                cadence_json::FromCadenceValue::from_cadence_value(&field.value)?
+                serde_cadence::FromCadenceValue::from_cadence_value(&field.value)?
             };
         }
     });
@@ -94,10 +94,10 @@ pub fn derive_from_cadence_value(input: TokenStream) -> TokenStream {
 
     // Generate the impl
     let expanded = quote! {
-        impl cadence_json::FromCadenceValue for #name {
-            fn from_cadence_value(value: &cadence_json::CadenceValue) -> cadence_json::Result<Self> {
+        impl serde_cadence::FromCadenceValue for #name {
+            fn from_cadence_value(value: &serde_cadence::CadenceValue) -> serde_cadence::Result<Self> {
                 match value {
-                    cadence_json::CadenceValue::Struct { value: composite } => {
+                    serde_cadence::CadenceValue::Struct { value: composite } => {
                         let fields = &composite.fields;
 
                         #(#field_extractions)*
@@ -106,7 +106,7 @@ pub fn derive_from_cadence_value(input: TokenStream) -> TokenStream {
                             #(#field_names),*
                         })
                     },
-                    _ => Err(cadence_json::Error::TypeMismatch {
+                    _ => Err(serde_cadence::Error::TypeMismatch {
                         expected: "Struct".to_string(),
                         got: format!("{:?}", value),
                     }),

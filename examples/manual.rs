@@ -1,5 +1,5 @@
 // examples/basic.rs
-use cadence_json::{CadenceValue, Result, ToCadenceValue};
+use serde_cadence::{CadenceValue, Result, ToCadenceValue};
 use serde::{Deserialize, Serialize};
 
 // Define a Rust struct that we want to serialize to Cadence-JSON
@@ -15,7 +15,7 @@ struct Person {
 impl ToCadenceValue for Person {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
         // Create a Struct CadenceValue with appropriate fields
-        use cadence_json::{CompositeField, CompositeValue};
+        use serde_cadence::{CompositeField, CompositeValue};
 
         let name_field = CompositeField {
             name: "name".to_string(),
