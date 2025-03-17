@@ -472,38 +472,154 @@ pub fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
-    // Convert CadenceValue to serde_json::Value
+    // First convert to standard JSON value
     let json_value = cadence_value_to_value(cadence_value)?;
 
-    // Extract the actual value based on the type
-    let actual_value = match &json_value {
-        Value::Object(obj) => {
-            // For objects with a type/value structure, extract the value
-            if let (Some(Value::String(_)), Some(value)) = (obj.get("type"), obj.get("value")) {
-                // Return the inner value for primitive types
-                match value {
-                    Value::String(_) | Value::Number(_) | Value::Bool(_) | Value::Null => value.clone(),
-                    // For complex values, keep the object with type information
-                    _ => json_value.clone(),
-                }
-            } else {
-                // If it's not a type/value structure, return as is
-                json_value.clone()
-            }
-        }
-        // For other types, return as is
-        _ => json_value.clone(),
-    };
+    // Process the JSON value to convert string numbers to actual JSON numbers
+    let processed_value = process_numeric_values(json_value);
 
-    // Deserialize the extracted value
-    match serde_json::from_value(actual_value) {
+    // Extract primitive value if possible
+    let final_value = extract_primitive_value(&processed_value);
+
+    // Try to deserialize with the processed value
+    match serde_json::from_value(final_value) {
         Ok(value) => Ok(value),
         Err(e) => {
-            // If direct deserialization fails, try with the original value
-            match serde_json::from_value(json_value) {
+            // If that fails, try with the original converted value
+            match serde_json::from_value(processed_value) {
                 Ok(value) => Ok(value),
                 Err(_) => Err(Error::SerdeJson(e)),
             }
         }
+    }
+}
+
+// Helper function to recursively process JSON values and convert string numbers to actual JSON numbers
+fn process_numeric_values(value: Value) -> Value {
+    match value {
+        Value::Object(mut obj) => {
+            // Check if this is a Cadence type/value structure
+            if let (Some(Value::String(type_name)), Some(inner_value)) = (obj.get("type").cloned(), obj.get("value").cloned()) {
+                // Handle specific types
+                match type_name.as_str() {
+                    // Integer types - convert string to number
+                    "Int" => {
+                        if let Value::String(s) = &inner_value {
+                            if let Ok(num) = s.parse::<i64>() {
+                                obj.insert("value".to_string(), Value::Number(serde_json::Number::from(num)));
+                            }
+                        }
+                    },
+                    "UInt" => {
+                        if let Value::String(s) = &inner_value {
+                            if let Ok(num) = s.parse::<u64>() {
+                                obj.insert("value".to_string(), Value::Number(serde_json::Number::from(num)));
+                            }
+                        }
+                    },
+                    // Composite type with fields
+                    "Struct" | "Resource" | "Event" | "Contract" | "Enum" => {
+                        if let Value::Object(mut inner_obj) = inner_value {
+                            if let Some(Value::Array(fields)) = inner_obj.get("fields").cloned() {
+                                // Process each field
+                                let processed_fields: Vec<Value> = fields.into_iter()
+                                    .map(|field| {
+                                        if let Value::Object(mut field_obj) = field {
+                                            // Process the field value
+                                            if let Some(field_value) = field_obj.get("value").cloned() {
+                                                field_obj.insert("value".to_string(), process_numeric_values(field_value));
+                                            }
+                                            Value::Object(field_obj)
+                                        } else {
+                                            field
+                                        }
+                                    })
+                                    .collect();
+
+                                // Update fields array
+                                inner_obj.insert("fields".to_string(), Value::Array(processed_fields));
+                                obj.insert("value".to_string(), Value::Object(inner_obj));
+                            }
+                        }
+                    },
+                    // Array type
+                    "Array" => {
+                        if let Value::Array(items) = inner_value {
+                            // Process each item
+                            let processed_items: Vec<Value> = items.into_iter()
+                                .map(|item| process_numeric_values(item))
+                                .collect();
+
+                            // Update array
+                            obj.insert("value".to_string(), Value::Array(processed_items));
+                        }
+                    },
+                    // Dictionary type
+                    "Dictionary" => {
+                        if let Value::Array(entries) = inner_value {
+                            // Process each dictionary entry
+                            let processed_entries: Vec<Value> = entries.into_iter()
+                                .map(|entry| {
+                                    if let Value::Object(mut entry_obj) = entry {
+                                        // Process key and value
+                                        if let Some(key) = entry_obj.get("key").cloned() {
+                                            entry_obj.insert("key".to_string(), process_numeric_values(key));
+                                        }
+                                        if let Some(value) = entry_obj.get("value").cloned() {
+                                            entry_obj.insert("value".to_string(), process_numeric_values(value));
+                                        }
+                                        Value::Object(entry_obj)
+                                    } else {
+                                        entry
+                                    }
+                                })
+                                .collect();
+
+                            // Update entries array
+                            obj.insert("value".to_string(), Value::Array(processed_entries));
+                        }
+                    },
+                    _ => {
+                        // For other types, recursively process the value
+                        obj.insert("value".to_string(), process_numeric_values(inner_value));
+                    }
+                }
+            } else {
+                // For regular objects, process all values
+                for (key, val) in obj.iter_mut() {
+                    if key != "type" { // Don't process the type field
+                        *val = process_numeric_values(val.clone());
+                    }
+                }
+            }
+            Value::Object(obj)
+        },
+        Value::Array(items) => {
+            // Process each item in the array
+            let processed_items: Vec<Value> = items.into_iter()
+                .map(|item| process_numeric_values(item))
+                .collect();
+
+            Value::Array(processed_items)
+        },
+        // Other value types don't need processing
+        _ => value,
+    }
+}
+
+// Helper function to extract primitive value from a Cadence type/value structure
+fn extract_primitive_value(value: &Value) -> Value {
+    if let Value::Object(obj) = value {
+        if let (Some(Value::String(_)), Some(inner_value)) = (obj.get("type"), obj.get("value")) {
+            // For primitive types, extract the inner value
+            match inner_value {
+                Value::String(_) | Value::Number(_) | Value::Bool(_) | Value::Null => inner_value.clone(),
+                _ => value.clone(),
+            }
+        } else {
+            value.clone()
+        }
+    } else {
+        value.clone()
     }
 }
