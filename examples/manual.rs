@@ -41,9 +41,7 @@ impl ToCadenceValue for Person {
 
         let tags_field = CompositeField {
             name: "tags".to_string(),
-            value: CadenceValue::Array {
-                value: tag_values,
-            },
+            value: CadenceValue::Array { value: tag_values },
         };
 
         Ok(CadenceValue::Struct {
@@ -70,6 +68,6 @@ fn main() -> Result<()> {
     // Serialize to JSON string
     let json = serde_json::to_string_pretty(&cadence_value)?;
     println!("Cadence-JSON representation:\n{}", json);
-    
+
     Ok(())
 }

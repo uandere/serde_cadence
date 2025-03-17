@@ -1,12 +1,11 @@
 #![allow(unused_variables)]
-use std::fmt;
 pub use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[cfg(feature = "derive")]
-pub use cadence_json_derive::{ToCadenceValue, FromCadenceValue};
+pub use cadence_json_derive::{FromCadenceValue, ToCadenceValue};
 
 pub mod impls;
-
 
 /// A Cadence value as represented in JSON
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,19 +15,13 @@ pub enum CadenceValue {
     Void {},
 
     #[serde(rename = "Optional")]
-    Optional {
-        value: Option<Box<CadenceValue>>,
-    },
+    Optional { value: Option<Box<CadenceValue>> },
 
     #[serde(rename = "Bool")]
-    Bool {
-        value: bool,
-    },
+    Bool { value: bool },
 
     #[serde(rename = "String")]
-    String {
-        value: String,
-    },
+    String { value: String },
 
     #[serde(rename = "Address")]
     Address {
@@ -42,99 +35,61 @@ pub enum CadenceValue {
     },
 
     #[serde(rename = "Int8")]
-    Int8 {
-        value: String,
-    },
+    Int8 { value: String },
 
     #[serde(rename = "Int16")]
-    Int16 {
-        value: String,
-    },
+    Int16 { value: String },
 
     #[serde(rename = "Int32")]
-    Int32 {
-        value: String,
-    },
+    Int32 { value: String },
 
     #[serde(rename = "Int64")]
-    Int64 {
-        value: String,
-    },
+    Int64 { value: String },
 
     #[serde(rename = "Int128")]
-    Int128 {
-        value: String,
-    },
+    Int128 { value: String },
 
     #[serde(rename = "Int256")]
-    Int256 {
-        value: String,
-    },
+    Int256 { value: String },
 
     #[serde(rename = "UInt")]
-    UInt {
-        value: String,
-    },
+    UInt { value: String },
 
     #[serde(rename = "UInt8")]
-    UInt8 {
-        value: String,
-    },
+    UInt8 { value: String },
 
     #[serde(rename = "UInt16")]
-    UInt16 {
-        value: String,
-    },
+    UInt16 { value: String },
 
     #[serde(rename = "UInt32")]
-    UInt32 {
-        value: String,
-    },
+    UInt32 { value: String },
 
     #[serde(rename = "UInt64")]
-    UInt64 {
-        value: String,
-    },
+    UInt64 { value: String },
 
     #[serde(rename = "UInt128")]
-    UInt128 {
-        value: String,
-    },
+    UInt128 { value: String },
 
     #[serde(rename = "UInt256")]
-    UInt256 {
-        value: String,
-    },
+    UInt256 { value: String },
 
     #[serde(rename = "Word8")]
-    Word8 {
-        value: String,
-    },
+    Word8 { value: String },
 
     #[serde(rename = "Word16")]
-    Word16 {
-        value: String,
-    },
+    Word16 { value: String },
 
     #[serde(rename = "Word32")]
-    Word32 {
-        value: String,
-    },
+    Word32 { value: String },
 
     #[serde(rename = "Word64")]
-    Word64 {
-        value: String,
-    },
+    Word64 { value: String },
 
     #[serde(rename = "Word128")]
-    Word128 {
-        value: String,
-    },
+    Word128 { value: String },
 
     #[serde(rename = "Word256")]
-    Word256 {
-        value: String,
-    },
+    Word256 { value: String },
 
     // Fixed point numbers
     #[serde(rename = "Fix64")]
@@ -143,70 +98,44 @@ pub enum CadenceValue {
     },
 
     #[serde(rename = "UFix64")]
-    UFix64 {
-        value: String,
-    },
+    UFix64 { value: String },
 
     #[serde(rename = "Array")]
-    Array {
-        value: Vec<CadenceValue>,
-    },
+    Array { value: Vec<CadenceValue> },
 
     #[serde(rename = "Dictionary")]
-    Dictionary {
-        value: Vec<DictionaryEntry>,
-    },
+    Dictionary { value: Vec<DictionaryEntry> },
 
     // Composite types
     #[serde(rename = "Struct")]
-    Struct {
-        value: CompositeValue,
-    },
+    Struct { value: CompositeValue },
 
     #[serde(rename = "Resource")]
-    Resource {
-        value: CompositeValue,
-    },
+    Resource { value: CompositeValue },
 
     #[serde(rename = "Event")]
-    Event {
-        value: CompositeValue,
-    },
+    Event { value: CompositeValue },
 
     #[serde(rename = "Contract")]
-    Contract {
-        value: CompositeValue,
-    },
+    Contract { value: CompositeValue },
 
     #[serde(rename = "Enum")]
-    Enum {
-        value: CompositeValue,
-    },
+    Enum { value: CompositeValue },
 
     #[serde(rename = "Path")]
-    Path {
-        value: PathValue,
-    },
+    Path { value: PathValue },
 
     #[serde(rename = "Type")]
-    Type {
-        value: TypeValue,
-    },
+    Type { value: TypeValue },
 
     #[serde(rename = "InclusiveRange")]
-    InclusiveRange {
-        value: RangeValue,
-    },
+    InclusiveRange { value: RangeValue },
 
     #[serde(rename = "Capability")]
-    Capability {
-        value: CapabilityValue,
-    },
+    Capability { value: CapabilityValue },
 
     #[serde(rename = "Function")]
-    Function {
-        value: FunctionValue,
-    },
+    Function { value: FunctionValue },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -280,7 +209,9 @@ pub enum CadenceType {
     AnyStructAttachment,
     Block,
     Bool,
-    Capability { type_: Box<CadenceType> },
+    Capability {
+        type_: Box<CadenceType>,
+    },
     CapabilityPath,
     Character,
     DeployedContract,
@@ -329,9 +260,13 @@ pub enum CadenceType {
     Word256,
 
     // Complex types
-    Optional { type_: Box<CadenceType> },
+    Optional {
+        type_: Box<CadenceType>,
+    },
 
-    VariableSizedArray { type_: Box<CadenceType> },
+    VariableSizedArray {
+        type_: Box<CadenceType>,
+    },
 
     ConstantSizedArray {
         type_: Box<CadenceType>,
@@ -446,10 +381,18 @@ pub struct ParameterType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "kind")]
 pub enum Authorization {
-    Unauthorized { entitlements: Option<Vec<Entitlement>> },
-    EntitlementMapAuthorization { entitlements: Vec<Entitlement> },
-    EntitlementConjunctionSet { entitlements: Vec<Entitlement> },
-    EntitlementDisjunctionSet { entitlements: Vec<Entitlement> },
+    Unauthorized {
+        entitlements: Option<Vec<Entitlement>>,
+    },
+    EntitlementMapAuthorization {
+        entitlements: Vec<Entitlement>,
+    },
+    EntitlementConjunctionSet {
+        entitlements: Vec<Entitlement>,
+    },
+    EntitlementDisjunctionSet {
+        entitlements: Vec<Entitlement>,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -573,7 +516,9 @@ where
     // This would likely need custom serialization logic.
 
     // For now, we'll just return an error
-    Err(Error::Custom("to_cadence_value not fully implemented".to_string()))
+    Err(Error::Custom(
+        "to_cadence_value not fully implemented".to_string(),
+    ))
 }
 
 fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
@@ -586,7 +531,9 @@ where
     // This would likely need custom deserialization logic.
 
     // For now, we'll just return an error
-    Err(Error::Custom("from_cadence_value not fully implemented".to_string()))
+    Err(Error::Custom(
+        "from_cadence_value not fully implemented".to_string(),
+    ))
 }
 
 // Additional helper functions for specific type conversions
@@ -643,14 +590,15 @@ where
 {
     // This is a placeholder; a real implementation would need to
     // iterate over the map and convert each key-value pair
-    Err(Error::Custom("to_cadence_dictionary not fully implemented".to_string()))
+    Err(Error::Custom(
+        "to_cadence_dictionary not fully implemented".to_string(),
+    ))
 }
 
 // Trait for types that can be converted to a CadenceValue
 pub trait ToCadenceValue {
     fn to_cadence_value(&self) -> Result<CadenceValue>;
 }
-
 
 // Trait for types that can be created from a CadenceValue
 pub trait FromCadenceValue: Sized {

@@ -3,8 +3,8 @@
 // This file contains implementations of ToCadenceValue and FromCadenceValue
 // for standard Rust types
 
-use crate::{CadenceValue, Result, Error, ToCadenceValue, FromCadenceValue};
-use std::collections::{HashMap, BTreeMap};
+use crate::{CadenceValue, Error, FromCadenceValue, Result, ToCadenceValue};
+use std::collections::{BTreeMap, HashMap};
 
 // String implementations
 impl ToCadenceValue for String {
@@ -68,9 +68,9 @@ macro_rules! impl_int_to_cadence {
         impl FromCadenceValue for $t {
             fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
                 match value {
-                    CadenceValue::$variant { value } => {
-                        value.parse().map_err(|e| Error::Custom(format!("Failed to parse {}: {}", stringify!($t), e)))
-                    }
+                    CadenceValue::$variant { value } => value.parse().map_err(|e| {
+                        Error::Custom(format!("Failed to parse {}: {}", stringify!($t), e))
+                    }),
                     _ => Err(Error::TypeMismatch {
                         expected: stringify!($variant).to_string(),
                         got: format!("{:?}", value),
@@ -110,12 +110,12 @@ impl ToCadenceValue for f64 {
 impl FromCadenceValue for f32 {
     fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
         match value {
-            CadenceValue::Fix64 { value } => {
-                value.parse().map_err(|e| Error::Custom(format!("Failed to parse f32: {}", e)))
-            }
-            CadenceValue::UFix64 { value } => {
-                value.parse().map_err(|e| Error::Custom(format!("Failed to parse f32: {}", e)))
-            }
+            CadenceValue::Fix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f32: {}", e))),
+            CadenceValue::UFix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f32: {}", e))),
             _ => Err(Error::TypeMismatch {
                 expected: "Fix64 or UFix64".to_string(),
                 got: format!("{:?}", value),
@@ -127,12 +127,12 @@ impl FromCadenceValue for f32 {
 impl FromCadenceValue for f64 {
     fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
         match value {
-            CadenceValue::Fix64 { value } => {
-                value.parse().map_err(|e| Error::Custom(format!("Failed to parse f64: {}", e)))
-            }
-            CadenceValue::UFix64 { value } => {
-                value.parse().map_err(|e| Error::Custom(format!("Failed to parse f64: {}", e)))
-            }
+            CadenceValue::Fix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f64: {}", e))),
+            CadenceValue::UFix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f64: {}", e))),
             _ => Err(Error::TypeMismatch {
                 expected: "Fix64 or UFix64".to_string(),
                 got: format!("{:?}", value),
@@ -188,12 +188,10 @@ impl<T: ToCadenceValue> ToCadenceValue for Option<T> {
 impl<T: FromCadenceValue> FromCadenceValue for Option<T> {
     fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
         match value {
-            CadenceValue::Optional { value } => {
-                match value {
-                    Some(inner_value) => Ok(Some(T::from_cadence_value(inner_value)?)),
-                    None => Ok(None),
-                }
-            }
+            CadenceValue::Optional { value } => match value {
+                Some(inner_value) => Ok(Some(T::from_cadence_value(inner_value)?)),
+                None => Ok(None),
+            },
             _ => Err(Error::TypeMismatch {
                 expected: "Optional".to_string(),
                 got: format!("{:?}", value),

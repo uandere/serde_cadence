@@ -1,8 +1,8 @@
 extern crate proc_macro;
 
 use proc_macro::TokenStream;
-use quote::{quote};
-use syn::{parse_macro_input, DeriveInput, Data, Fields};
+use quote::quote;
+use syn::{Data, DeriveInput, Fields, parse_macro_input};
 
 #[proc_macro_derive(ToCadenceValue)]
 pub fn derive_to_cadence_value(input: TokenStream) -> TokenStream {
@@ -37,9 +37,9 @@ pub fn derive_to_cadence_value(input: TokenStream) -> TokenStream {
         impl cadence_json::ToCadenceValue for #name {
             fn to_cadence_value(&self) -> cadence_json::Result<cadence_json::CadenceValue> {
                 let mut fields = Vec::new();
-                
+
                 #(#field_conversions)*
-                
+
                 Ok(cadence_json::CadenceValue::Struct {
                     value: cadence_json::CompositeValue {
                         id: stringify!(#name).to_string(),
@@ -76,7 +76,7 @@ pub fn derive_from_cadence_value(input: TokenStream) -> TokenStream {
             let #field_name = {
                 let field = fields.iter()
                     .find(|f| f.name == #field_name_str)
-                    .ok_or_else(|| 
+                    .ok_or_else(||
                         cadence_json::Error::Custom(
                             format!("Field {} not found in Cadence value", #field_name_str)
                         )
@@ -99,9 +99,9 @@ pub fn derive_from_cadence_value(input: TokenStream) -> TokenStream {
                 match value {
                     cadence_json::CadenceValue::Struct { value: composite } => {
                         let fields = &composite.fields;
-                        
+
                         #(#field_extractions)*
-                        
+
                         Ok(Self {
                             #(#field_names),*
                         })
