@@ -1,9 +1,8 @@
 // src/conversion.rs - Updated implementation
 
 use crate::{CadenceValue, CompositeField, CompositeValue, DictionaryEntry, Error, Result};
-use serde::{Deserialize, Serializer};
+use serde::{Deserialize};
 use serde_json::Value;
-use std::collections::BTreeMap;
 
 /// Convert a serde_json::Value to a CadenceValue
 pub fn value_to_cadence_value(value: &Value) -> Result<CadenceValue> {
