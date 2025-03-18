@@ -4,10 +4,8 @@ use std::fmt;
 
 #[cfg(feature = "derive")]
 pub use cadence_json_derive::{FromCadenceValue, ToCadenceValue};
-use crate::conversion::value_to_cadence_value;
 
 pub mod impls;
-pub mod conversion;
 
 /// A Cadence value as represented in JSON
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -511,18 +509,15 @@ fn to_cadence_value<T>(value: &T) -> Result<CadenceValue>
 where
     T: Serialize + ?Sized,
 {
-    // First serialize to a serde_json::Value
-    let json_value = serde_json::to_value(value)?;
-
-    // Then convert to CadenceValue
-    value_to_cadence_value(&json_value)
+    // Use the proper implementation
+    todo!()
 }
 fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
 {
-    // Use the proper implementation from the conversion module
-    conversion::from_cadence_value(cadence_value)
+    // Use the proper implementation
+    todo!()
 }
 
 // Additional helper functions for specific type conversions

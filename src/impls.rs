@@ -71,6 +71,12 @@ macro_rules! impl_int_to_cadence {
                     CadenceValue::$variant { value } => value.parse().map_err(|e| {
                         Error::Custom(format!("Failed to parse {}: {}", stringify!($t), e))
                     }),
+                    CadenceValue::Int {value} => value.parse().map_err(|e| {
+                        Error::Custom(format!("Failed to parse {}: {}", stringify!($t), e))
+                    }),
+                    CadenceValue::UInt {value} => value.parse().map_err(|e| {
+                        Error::Custom(format!("Failed to parse {}: {}", stringify!($t), e))
+                    }),
                     _ => Err(Error::TypeMismatch {
                         expected: stringify!($variant).to_string(),
                         got: format!("{:?}", value),
