@@ -6,6 +6,12 @@
 use crate::{CadenceValue, Error, FromCadenceValue, Result, ToCadenceValue};
 use std::collections::{BTreeMap, HashMap};
 
+impl FromCadenceValue for CadenceValue {
+    fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
+        Ok(value.clone())
+    }
+}
+
 // String implementations
 impl ToCadenceValue for String {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
