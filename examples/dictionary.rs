@@ -1,7 +1,6 @@
+use serde_cadence::{CadenceValue, FromCadenceValue, ToCadenceValue};
 use std::collections::HashMap;
 use std::error::Error;
-use serde_cadence::{CadenceValue, FromCadenceValue, ToCadenceValue};
-
 
 fn main() -> Result<(), Box<dyn Error>> {
     // The Cadence-JSON string provided
@@ -32,7 +31,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let round_trip_inventory = HashMap::from_cadence_value(&round_trip_value)?;
 
     // Ensure our data made it through correctly
-    assert_eq!(modified_inventory, round_trip_inventory, "Round-trip test failed!");
+    assert_eq!(
+        modified_inventory, round_trip_inventory,
+        "Round-trip test failed!"
+    );
     println!("Round-trip test successful!");
 
     Ok(())

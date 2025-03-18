@@ -440,7 +440,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Serializes a Rust type to a Cadence-JSON string
 pub fn to_string<T>(value: &T) -> Result<String>
 where
-    T: Serialize + ?Sized,
+    T: Serialize + ToCadenceValue + ?Sized,
 {
     let cadence_value = to_cadence_value(value)?;
     let json = serde_json::to_string(&cadence_value)?;
@@ -450,7 +450,7 @@ where
 /// Serializes a Rust type to a pretty-printed Cadence-JSON string
 pub fn to_string_pretty<T>(value: &T) -> Result<String>
 where
-    T: Serialize + ?Sized,
+    T: Serialize + ToCadenceValue + ?Sized,
 {
     let cadence_value = to_cadence_value(value)?;
     let json = serde_json::to_string_pretty(&cadence_value)?;
@@ -460,7 +460,7 @@ where
 /// Serializes a Rust type to a Cadence-JSON byte vector
 pub fn to_vec<T>(value: &T) -> Result<Vec<u8>>
 where
-    T: Serialize + ?Sized,
+    T: Serialize + ToCadenceValue + ?Sized,
 {
     let cadence_value = to_cadence_value(value)?;
     let json = serde_json::to_vec(&cadence_value)?;
@@ -470,7 +470,7 @@ where
 /// Serializes a Rust type to a pretty-printed Cadence-JSON byte vector
 pub fn to_vec_pretty<T>(value: &T) -> Result<Vec<u8>>
 where
-    T: Serialize + ?Sized,
+    T: Serialize + ToCadenceValue + ?Sized,
 {
     let cadence_value = to_cadence_value(value)?;
     let json = serde_json::to_vec_pretty(&cadence_value)?;
@@ -480,7 +480,7 @@ where
 /// Deserializes a Cadence-JSON string to a Rust type
 pub fn from_str<'a, T>(s: &'a str) -> Result<T>
 where
-    T: for<'de> Deserialize<'de>,
+    T: for<'de> Deserialize<'de> + FromCadenceValue,
 {
     let cadence_value: CadenceValue = serde_json::from_str(s)?;
     from_cadence_value(&cadence_value)
@@ -489,7 +489,7 @@ where
 /// Deserializes a Cadence-JSON byte slice to a Rust type
 pub fn from_slice<'a, T>(v: &'a [u8]) -> Result<T>
 where
-    T: for<'de> Deserialize<'de>,
+    T: for<'de> Deserialize<'de> + FromCadenceValue,
 {
     let cadence_value: CadenceValue = serde_json::from_slice(v)?;
     from_cadence_value(&cadence_value)
@@ -499,7 +499,7 @@ where
 pub fn from_reader<R, T>(rdr: R) -> Result<T>
 where
     R: std::io::Read,
-    T: for<'de> Deserialize<'de>,
+    T: for<'de> Deserialize<'de> + FromCadenceValue,
 {
     let cadence_value: CadenceValue = serde_json::from_reader(rdr)?;
     from_cadence_value(&cadence_value)
@@ -507,17 +507,15 @@ where
 
 fn to_cadence_value<T>(value: &T) -> Result<CadenceValue>
 where
-    T: Serialize + ?Sized,
+    T: ToCadenceValue + ?Sized,
 {
-    // Use the proper implementation
-    todo!()
+    value.to_cadence_value()
 }
 fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
 where
-    T: for<'de> Deserialize<'de>,
+    T: FromCadenceValue,
 {
-    // Use the proper implementation
-    todo!()
+    T::from_cadence_value(cadence_value)
 }
 
 // Additional helper functions for specific type conversions
@@ -537,7 +535,7 @@ pub fn to_cadence_bool(value: bool) -> CadenceValue {
 /// Convert a Rust Option to CadenceValue::Optional
 pub fn to_cadence_optional<T>(value: Option<T>) -> Result<CadenceValue>
 where
-    T: Serialize,
+    T: Serialize + ToCadenceValue,
 {
     match value {
         Some(v) => {
@@ -553,7 +551,7 @@ where
 /// Convert a Rust Vec to CadenceValue::Array
 pub fn to_cadence_array<T>(values: &[T]) -> Result<CadenceValue>
 where
-    T: Serialize,
+    T: Serialize + ToCadenceValue,
 {
     let mut cadence_values = Vec::with_capacity(values.len());
     for value in values {

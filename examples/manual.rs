@@ -1,6 +1,6 @@
 // examples/basic.rs
-use serde_cadence::{CadenceValue, Result, ToCadenceValue};
 use serde::{Deserialize, Serialize};
+use serde_cadence::{CadenceValue, Result, ToCadenceValue};
 
 // Define a Rust struct that we want to serialize to Cadence-JSON
 #[derive(Debug, Serialize, Deserialize)]

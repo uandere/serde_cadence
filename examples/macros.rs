@@ -1,6 +1,6 @@
 // examples/derive_example.rs
-use serde_cadence ::{self, FromCadenceValue, Result, ToCadenceValue};
 use serde::{Deserialize, Serialize};
+use serde_cadence::{self, FromCadenceValue, Result, ToCadenceValue};
 
 // Define a struct and derive both Serde and our custom Cadence traits
 #[derive(Debug, Serialize, Deserialize, ToCadenceValue, FromCadenceValue)]
