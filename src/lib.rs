@@ -505,13 +505,13 @@ where
     from_cadence_value(&cadence_value)
 }
 
-fn to_cadence_value<T>(value: &T) -> Result<CadenceValue>
+pub fn to_cadence_value<T>(value: &T) -> Result<CadenceValue>
 where
     T: ToCadenceValue + ?Sized,
 {
     value.to_cadence_value()
 }
-fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
+pub fn from_cadence_value<T>(cadence_value: &CadenceValue) -> Result<T>
 where
     T: FromCadenceValue,
 {
