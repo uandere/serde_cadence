@@ -1,7 +1,7 @@
 #![allow(unused_variables)]
 pub use serde::{Deserialize, Serialize};
 use std::fmt;
-
+use derive_more::From;
 #[cfg(feature = "derive")]
 pub use cadence_json_derive::{FromCadenceValue, ToCadenceValue};
 
@@ -94,11 +94,11 @@ pub enum CadenceValue {
     // Fixed point numbers
     #[serde(rename = "Fix64")]
     Fix64 {
-        value: String, // Decimal string representation
+        value: f64,
     },
 
     #[serde(rename = "UFix64")]
-    UFix64 { value: String },
+    UFix64 { value: f64 },
 
     #[serde(rename = "Array")]
     Array { value: Vec<CadenceValue> },
@@ -403,22 +403,17 @@ pub enum Entitlement {
 }
 
 /// Error types for the Cadence-JSON serialization/deserialization
-#[derive(Debug)]
+#[derive(Debug, From)]
 pub enum Error {
+    #[from]
     SerdeJson(serde_json::Error),
     InvalidCadenceValue(String),
     TypeMismatch { expected: String, got: String },
     UnsupportedType(String),
+    #[from]
+    Conversion(core::convert::Infallible),
     Custom(String),
 }
-
-impl From<serde_json::Error> for Error {
-    fn from(err: serde_json::Error) -> Self {
-        Error::SerdeJson(err)
-    }
-}
-
-impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -430,6 +425,7 @@ impl fmt::Display for Error {
             }
             Error::UnsupportedType(msg) => write!(f, "Unsupported type: {}", msg),
             Error::Custom(msg) => write!(f, "{}", msg),
+            Error::Conversion(e) => write!(f, "{}", e),
         }
     }
 }

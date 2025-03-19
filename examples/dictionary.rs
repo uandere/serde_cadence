@@ -1,8 +1,7 @@
-use serde_cadence::{CadenceValue, FromCadenceValue, ToCadenceValue};
+use serde_cadence::{CadenceValue, Error, FromCadenceValue, ToCadenceValue};
 use std::collections::HashMap;
-use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Error> {
     // The Cadence-JSON string provided
     let cadence_json = r#"{"value":[{"key":{"value":"banana","type":"String"},"value":{"value":"10","type":"Int"}},{"key":{"value":"cherry","type":"String"},"value":{"value":"15","type":"Int"}},{"key":{"value":"apple","type":"String"},"value":{"value":"5","type":"Int"}}],"type":"Dictionary"}"#;
 
