@@ -93,12 +93,10 @@ pub enum CadenceValue {
 
     // Fixed point numbers
     #[serde(rename = "Fix64")]
-    Fix64 {
-        value: f64,
-    },
+    Fix64 { value: String},
 
     #[serde(rename = "UFix64")]
-    UFix64 { value: f64 },
+    UFix64 { value: String },
 
     #[serde(rename = "Array")]
     Array { value: Vec<CadenceValue> },

@@ -120,7 +120,7 @@ impl_int_to_cadence!(i64, Int64);
 impl ToCadenceValue for f32 {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
         Ok(CadenceValue::Fix64 {
-            value: f64::from(*self),
+            value: format!("{:.8}", self),
         })
     }
 }
@@ -128,7 +128,7 @@ impl ToCadenceValue for f32 {
 impl ToCadenceValue for f64 {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
         Ok(CadenceValue::Fix64 {
-            value: f64::from(*self),
+            value: format!("{:.8}", self),
         })
     }
 }
@@ -136,8 +136,12 @@ impl ToCadenceValue for f64 {
 impl FromCadenceValue for f32 {
     fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
         match value {
-            CadenceValue::Fix64 { value } => Ok(*value as f32),
-            CadenceValue::UFix64 { value } => Ok(*value as f32),
+            CadenceValue::Fix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f32: {}", e))),
+            CadenceValue::UFix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f32: {}", e))),
             _ => Err(Error::TypeMismatch {
                 expected: "Fix64 or UFix64".to_string(),
                 got: format!("{:?}", value),
@@ -149,8 +153,12 @@ impl FromCadenceValue for f32 {
 impl FromCadenceValue for f64 {
     fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
         match value {
-            CadenceValue::Fix64 { value } => Ok(*value),
-            CadenceValue::UFix64 { value } => Ok(*value),
+            CadenceValue::Fix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f64: {}", e))),
+            CadenceValue::UFix64 { value } => value
+                .parse()
+                .map_err(|e| Error::Custom(format!("Failed to parse f64: {}", e))),
             _ => Err(Error::TypeMismatch {
                 expected: "Fix64 or UFix64".to_string(),
                 got: format!("{:?}", value),
