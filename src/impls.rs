@@ -12,6 +12,12 @@ impl FromCadenceValue for CadenceValue {
     }
 }
 
+impl ToCadenceValue for CadenceValue {
+    fn to_cadence_value(&self) -> Result<CadenceValue> {
+        Ok(self.clone())
+    }
+}
+
 // String implementations
 impl ToCadenceValue for String {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
