@@ -583,6 +583,6 @@ pub trait ToCadenceValue {
 }
 
 // Trait for types that can be created from a CadenceValue
-pub trait FromCadenceValue: Sized {
-    fn from_cadence_value(value: &CadenceValue) -> Result<Self>;
+pub trait FromCadenceValue {
+    fn from_cadence_value(value: &CadenceValue) -> Result<Self> where Self: Sized;
 }
