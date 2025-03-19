@@ -21,6 +21,14 @@ impl ToCadenceValue for String {
     }
 }
 
+impl ToCadenceValue for str {
+    fn to_cadence_value(&self) -> Result<CadenceValue> {
+        Ok(CadenceValue::String {
+            value: self.to_string(),
+        })
+    }
+}
+
 impl ToCadenceValue for &str {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
         Ok(CadenceValue::String {
