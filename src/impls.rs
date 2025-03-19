@@ -120,7 +120,7 @@ impl_int_to_cadence!(i64, Int64);
 impl ToCadenceValue for f32 {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
         Ok(CadenceValue::Fix64 {
-            value: self.to_string(),
+            value: format!("{:.2}", self),
         })
     }
 }
@@ -128,7 +128,7 @@ impl ToCadenceValue for f32 {
 impl ToCadenceValue for f64 {
     fn to_cadence_value(&self) -> Result<CadenceValue> {
         Ok(CadenceValue::Fix64 {
-            value: self.to_string(),
+            value: format!("{:.2}", self),
         })
     }
 }

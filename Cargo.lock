@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "serde_cadence"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "cadence_json_derive",
  "serde",
