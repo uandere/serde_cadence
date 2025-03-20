@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput, Fields, parse_macro_input};
+use syn::{Data, DeriveInput, Fields, parse_macro_input,};
 
 #[proc_macro_derive(ToCadenceValue)]
 pub fn derive_to_cadence_value(input: TokenStream) -> TokenStream {
@@ -23,9 +23,13 @@ pub fn derive_to_cadence_value(input: TokenStream) -> TokenStream {
         let field_name = &field.ident;
         let field_name_str = field_name.as_ref().unwrap().to_string();
 
+        // Look for serde rename attribute
+        let renamed = find_serde_rename(field);
+        let field_name_for_cadence = renamed.unwrap_or_else(|| field_name_str.clone());
+
         quote! {
             let #field_name = serde_cadence::CompositeField {
-                name: #field_name_str.to_string(),
+                name: #field_name_for_cadence.to_string(),
                 value: self.#field_name.to_cadence_value()?,
             };
             fields.push(#field_name);
@@ -72,13 +76,17 @@ pub fn derive_from_cadence_value(input: TokenStream) -> TokenStream {
         let field_name = &field.ident;
         let field_name_str = field_name.as_ref().unwrap().to_string();
 
+        // Look for serde rename attribute
+        let renamed = find_serde_rename(field);
+        let field_name_for_cadence = renamed.unwrap_or_else(|| field_name_str.clone());
+
         quote! {
             let #field_name = {
                 let field = fields.iter()
-                    .find(|f| f.name == #field_name_str)
+                    .find(|f| f.name == #field_name_for_cadence)
                     .ok_or_else(||
                         serde_cadence::Error::Custom(
-                            format!("Field {} not found in Cadence value", #field_name_str)
+                            format!("Field {} not found in Cadence value", #field_name_for_cadence)
                         )
                     )?;
                 serde_cadence::FromCadenceValue::from_cadence_value(&field.value)?
@@ -116,4 +124,29 @@ pub fn derive_from_cadence_value(input: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(expanded)
+}
+
+// Helper function to extract the rename value from serde attributes
+fn find_serde_rename(field: &syn::Field) -> Option<String> {
+    for attr in &field.attrs {
+        if attr.path().is_ident("serde") {
+            // Use parse_nested_meta instead of parse_meta
+            let mut rename_value = None;
+
+            // This is the new way to parse attributes in Syn 2.0
+            let _ = attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("rename") {
+                    // Parse the string literal value
+                    let value = meta.value()?.parse::<syn::LitStr>()?;
+                    rename_value = Some(value.value());
+                }
+                Ok(())
+            });
+
+            if rename_value.is_some() {
+                return rename_value;
+            }
+        }
+    }
+    None
 }

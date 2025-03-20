@@ -8,6 +8,7 @@ struct NFT {
     id: String,
     name: String,
     owner: String,
+    #[serde(rename="Metadata")]
     metadata: Metadata,
 }
 
