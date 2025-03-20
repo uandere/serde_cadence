@@ -428,6 +428,19 @@ impl fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Error::SerdeJson(err) => Some(err),
+            Error::InvalidCadenceValue(_) => None,
+            Error::TypeMismatch { .. } => None,
+            Error::UnsupportedType(_) => None,
+            Error::Conversion(err) => Some(err),
+            Error::Custom(_) => None,
+        }
+    }
+}
+
 /// Result type for Cadence-JSON operations
 pub type Result<T> = std::result::Result<T, Error>;
 
