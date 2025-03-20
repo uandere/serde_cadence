@@ -585,11 +585,11 @@ where
 }
 
 // Trait for types that can be converted to a CadenceValue
-pub trait ToCadenceValue {
+pub trait ToCadenceValue: Sync {
     fn to_cadence_value(&self) -> Result<CadenceValue>;
 }
 
 // Trait for types that can be created from a CadenceValue
-pub trait FromCadenceValue {
+pub trait FromCadenceValue: Sync {
     fn from_cadence_value(value: &CadenceValue) -> Result<Self> where Self: Sized;
 }
