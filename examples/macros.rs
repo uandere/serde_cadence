@@ -38,6 +38,8 @@ fn main() -> Result<()> {
 
     // Convert to Cadence-JSON
     let cadence_value = nft.to_cadence_value()?;
+    
+    println!("{:?}", cadence_value);
 
     // Serialize to JSON string
     let json = serde_json::to_string_pretty(&cadence_value)?;

@@ -47,6 +47,7 @@ impl FromCadenceValue for String {
     fn from_cadence_value(value: &CadenceValue) -> Result<Self> {
         match value {
             CadenceValue::String { value } => Ok(value.clone()),
+            CadenceValue::Address { value } => Ok(value.clone()),
             _ => Err(Error::TypeMismatch {
                 expected: "String".to_string(),
                 got: format!("{:?}", value),
